@@ -1,10 +1,23 @@
-import { Form, Link } from '@remix-run/react'
-import { useState } from 'react'
+import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
+import {
+  Form,
+  json,
+  Link,
+  redirect,
+  useActionData,
+  useNavigate,
+} from '@remix-run/react'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { Close, Mark } from '~/components/shared/icons'
 import Input from '~/components/shared/Input'
 import SubmitButton from '~/components/shared/SubmitButton'
 import { Progress } from '~/components/ui/progress'
+import { ResetPasswordDTO } from '~/dto/auth.dto'
+import { formatZodErrors, IError } from '~/lib/formatZodError'
 import { getFormError } from '~/lib/getFormError'
+import { preventLoggedInUser } from '~/lib/preventLoggedInUser'
+import { resetPassword } from '~/server/auth.server'
 
 export const PasswordChecks = [
   {
@@ -28,6 +41,48 @@ export const PasswordChecks = [
     message: 'Special characters',
   },
 ]
+export async function loader({ request }: LoaderFunctionArgs) {
+  if (await preventLoggedInUser(request)) {
+    return redirect('/')
+  }
+
+  return json({})
+}
+
+export async function action({ request, params }: ActionFunctionArgs) {
+  const formData = await request.formData()
+  const password = formData.get('password') ?? ''
+  const confirm_password = formData.get('confirm_password') ?? ''
+
+  try {
+    const result = ResetPasswordDTO.parse({
+      confirm_password,
+      password,
+      user: parseInt(params?.uid as string),
+      token: params?.token,
+    })
+
+    const response = await resetPassword(
+      result.user,
+      result.password,
+      result.token
+    )
+
+    return json({
+      errors: [] as IError[],
+      response: response.message,
+      success: response.status,
+    })
+  } catch (error: any) {
+    if (error.errors?.length) {
+      return json({
+        errors: formatZodErrors(error.errors),
+        response: 'Validation Errors',
+        success: false,
+      })
+    }
+  }
+}
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('')
@@ -88,21 +143,33 @@ export default function ResetPassword() {
     )
   }
 
+  const actionData = useActionData<typeof action>()
+  const router = useNavigate()
+
+  useEffect(() => {
+    if (actionData?.success) {
+      toast.success(actionData.response)
+      router('/login')
+    } else if (actionData) {
+      toast.error(actionData.response)
+    }
+  }, [actionData])
+
   return (
     <div className="lg:mx-auto lg:max-w-[400px]">
-      <h1 className="text-agreen mt-[110px] text-center text-xl font-bold lg:mt-[83px] lg:text-2xl">
+      <h1 className="mt-[110px] text-center text-xl font-bold text-agreen lg:mt-[83px] lg:text-2xl">
         Create new password
       </h1>
-      <h4 className="text-ablack mt-[10px] text-center text-sm lg:mt-[20px] lg:text-base">
+      <h4 className="mt-[10px] text-center text-sm text-ablack lg:mt-[20px] lg:text-base">
         Create a new password for your account
       </h4>
 
-      <Form className="mt-[30px] flex flex-col gap-5">
+      <Form method="POST" className="mt-[30px] flex flex-col gap-5">
         <Input
           label="Password"
           type="password"
           name={'password'}
-          error={getFormError('password', [])}
+          error={getFormError('password', actionData?.errors)}
           callback={setPassword}
         />
         <div className="">
@@ -133,19 +200,19 @@ export default function ResetPassword() {
           <Input
             label="Confirm New Password"
             type="password"
-            name={'confirm-password'}
-            error={getFormError('confirm-password', [])}
+            name={'confirm_password'}
+            error={getFormError('confirm_password', actionData?.errors)}
           />
 
           <div className="mt-[30px] flex justify-end lg:mt-8">
             <SubmitButton
-              className="bg-agreen w-full rounded-full py-[17px] font-bold text-white disabled:opacity-90"
+              className="w-full rounded-full bg-agreen py-[17px] font-bold text-white disabled:opacity-90"
               label="Reset Password"
             />
           </div>
         </div>
       </Form>
-      <p className="text-ablack mt-[20px] block text-center font-bold">
+      <p className="mt-[20px] block text-center font-bold text-ablack">
         <Link to={'/login'}>Return to Login</Link>
       </p>
     </div>

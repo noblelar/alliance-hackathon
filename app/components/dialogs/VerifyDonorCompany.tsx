@@ -1,3 +1,4 @@
+import { Form } from '@remix-run/react'
 import {
   Dialog,
   DialogClose,
@@ -7,6 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '~/components/ui/dialog'
+import SubmitButton from '../shared/SubmitButton'
 
 export default function VerifyDonorCompanyModal({
   children,
@@ -22,22 +24,29 @@ export default function VerifyDonorCompanyModal({
             Verify Some Company Name
           </DialogTitle>
         </DialogHeader>
-        <div>
-          <p>
-            You are about to verify Some Company Name as a Donor Company. Do you
-            want to proceed?
-          </p>
-        </div>
-        <DialogFooter className="mt-5">
-          <DialogClose>
-            <button className="rounded-full border-2 border-[#006B4B] px-[54px] py-2 font-bold text-[#006B4B]">
-              Cancel
-            </button>
-          </DialogClose>
-          <button className="hidden rounded-full border border-[#006B4B] bg-[#006B4B] px-[54px] py-2 font-bold text-white lg:block">
-            Save
-          </button>
-        </DialogFooter>
+        <Form method="POST">
+          <div>
+            <p>
+              You are about to verify Some Company Name as a Donor Company. Do
+              you want to proceed?
+            </p>
+          </div>
+          <input className="hidden" value="accept" name="actionType" />
+          <DialogFooter className="mt-5">
+            <DialogClose type="button">
+              <button
+                type="button"
+                className="rounded-full border-2 border-[#006B4B] px-[54px] py-2 font-bold text-[#006B4B]"
+              >
+                Cancel
+              </button>
+            </DialogClose>
+            <SubmitButton
+              label="Verify"
+              className="hidden rounded-full border border-[#006B4B] bg-[#006B4B] px-[54px] py-2 font-bold text-white lg:block"
+            />
+          </DialogFooter>
+        </Form>
       </DialogContent>
     </Dialog>
   )

@@ -1,4 +1,4 @@
-import { Link, Outlet } from '@remix-run/react'
+import { Link, MetaFunction, Outlet } from '@remix-run/react'
 import {
   FooterLogo,
   Instagram,
@@ -6,6 +6,17 @@ import {
   LogoGreen,
   XLogo,
 } from '~/components/shared/icons'
+
+export const meta: MetaFunction = () => [
+  {
+    title: 'Big Alliance | Empowering Communities, Elevating Partnerships.',
+  },
+  {
+    name: 'description',
+    content:
+      'We make community investment easier, more effective  and more rewarding for our business partners.',
+  },
+]
 
 export default function Home() {
   return (

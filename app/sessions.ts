@@ -1,7 +1,7 @@
 import { createCookieSessionStorage } from '@remix-run/node'
 
 type SessionData = {
-  accessToken: string
+  isLoggedIn: boolean
   email: string
   id: number
   firstName: string

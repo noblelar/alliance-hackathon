@@ -13,55 +13,19 @@ import {
 import BlockUserModal from '../dialogs/BlockUser'
 import RemoveUserModal from '../dialogs/RemoveUser'
 import ResetPasswordModal from '../dialogs/ResetPassword'
+import UnblockUserModal from '../dialogs/UnblockUser'
 import AdminTable from './AdminTable'
 
-const data: DonorCompany[] = [
-  {
-    id: 'm5gr84i9',
-    firstName: 'Oliver',
-    lastName: 'Otchere',
-    role: 'Admin',
-    email: 'carmella@hotmail.com',
-  },
-  {
-    id: '3u1reuv4',
-    firstName: 'Oliver',
-    lastName: 'Otchere',
-    role: 'Admin',
-    email: 'carmella@hotmail.com',
-  },
-  {
-    id: 'derv1ws0',
-    firstName: 'Oliver',
-    lastName: 'Otchere',
-    role: 'Admin',
-    email: 'carmella@hotmail.com',
-  },
-  {
-    id: '5kma53ae',
-    firstName: 'Oliver',
-    lastName: 'Otchere',
-    role: 'Admin',
-    email: 'carmella@hotmail.com',
-  },
-  {
-    id: 'bhqecj4p',
-    firstName: 'Oliver',
-    lastName: 'Otchere',
-    role: 'Admin',
-    email: 'carmella@hotmail.com',
-  },
-]
-
-export type DonorCompany = {
-  id: string
+export type User = {
+  id: number
   firstName: string
   lastName: string
   email: string
   role: string
+  isBlocked: boolean
 }
 
-export const columns: ColumnDef<DonorCompany>[] = [
+export const columns: ColumnDef<User>[] = [
   {
     accessorKey: 'firstName',
     header: ({ column }) => {
@@ -117,6 +81,15 @@ export const columns: ColumnDef<DonorCompany>[] = [
   {
     accessorKey: 'role',
     header: 'Role',
+    cell: ({ row }) => <div className="">Admin</div>,
+  },
+  {
+    accessorKey: 'isBlocked',
+    header: 'Blocked',
+    cell: ({ row }) => {
+      const r = row.original
+      return <div className="">{r.isBlocked ? 'YES' : 'NO'}</div>
+    },
   },
 
   {
@@ -124,16 +97,35 @@ export const columns: ColumnDef<DonorCompany>[] = [
     header: 'Actions',
     enableHiding: false,
     cell: ({ row }) => {
-      const payment = row.original
+      const r = row.original
       const [isResetOpen, setIsResetOpen] = useState(false)
       const [isBlockOpen, setIsBlockOpen] = useState(false)
+      const [isUnblockOpen, setIsUnblockOpen] = useState(false)
       const [isRemoveOpen, setIsRemoveOpen] = useState(false)
 
       return (
         <>
-          <ResetPasswordModal isOpen={isResetOpen} setOpen={setIsResetOpen} />
-          <BlockUserModal isOpen={isBlockOpen} setOpen={setIsBlockOpen} />
-          <RemoveUserModal isOpen={isRemoveOpen} setOpen={setIsRemoveOpen} />
+          <ResetPasswordModal
+            adminId={r.id}
+            isOpen={isResetOpen}
+            setOpen={setIsResetOpen}
+            email={r.email}
+          />
+          <BlockUserModal
+            adminId={r.id}
+            isOpen={isBlockOpen}
+            setOpen={setIsBlockOpen}
+          />
+          <RemoveUserModal
+            adminId={r.id}
+            isOpen={isRemoveOpen}
+            setOpen={setIsRemoveOpen}
+          />
+          <UnblockUserModal
+            adminId={r.id}
+            isOpen={isUnblockOpen}
+            setOpen={setIsUnblockOpen}
+          />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -145,13 +137,25 @@ export const columns: ColumnDef<DonorCompany>[] = [
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setIsResetOpen(true)}>
-                Reset Password
-              </DropdownMenuItem>
+              {!r.isBlocked && (
+                <DropdownMenuItem onClick={() => setIsResetOpen(true)}>
+                  Reset Password
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setIsBlockOpen(true)}>
-                Block User
-              </DropdownMenuItem>
+              {!r.isBlocked && (
+                <DropdownMenuItem onClick={() => setIsBlockOpen(true)}>
+                  Block User
+                </DropdownMenuItem>
+              )}
+              {r.isBlocked && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setIsUnblockOpen(true)}>
+                    Unblock User
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => setIsRemoveOpen(true)}
@@ -167,6 +171,6 @@ export const columns: ColumnDef<DonorCompany>[] = [
   },
 ]
 
-export function UserTable() {
+export function UserTable({ data }: { data: User[] }) {
   return <AdminTable columns={columns} data={data} />
 }

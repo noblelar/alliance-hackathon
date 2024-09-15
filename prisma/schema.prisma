@@ -12,3 +12,110 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Admin {
+  id        Int         @id @default(autoincrement())
+  email     String
+  firstName String
+  lastName  String
+  provider  String?
+  password  String
+  role      String      @default("Admin")
+  isDeleted Boolean     @default(false)
+  isBlocked Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  TwoFactor TwoFactor[]
+}
+
+model ResetPasswordRequest {
+  id        Int      @id @default(autoincrement())
+  token     String
+  email     String
+  userId    Int
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum CampaignStatus {
+  DRAFT
+  PUBLISHED
+  ENDED
+}
+
+enum DonorCompanyStatus {
+  VERIFIED
+  UNVERIFIED
+  DECLINED
+}
+
+model Campaign {
+  id           Int                 @id @default(autoincrement())
+  image        String
+  title        String
+  targetAmount String
+  status       CampaignStatus      @default(DRAFT)
+  message      String
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  donations    CampaignDonations[]
+}
+
+model DonorCompany {
+  id                 Int                @id @default(autoincrement())
+  name               String
+  address            String
+  contactPersonName  String
+  contactPersonEmail String
+  declineMessage     String             @default("")
+  status             DonorCompanyStatus @default(UNVERIFIED)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+}
+
+model CampaignDonations {
+  id                Int             @id @default(autoincrement())
+  isCompanyDonation Boolean         @default(false)
+  name              String
+  email             String
+  amount            Float
+  donationId        String
+  GiftAided         Boolean         @default(false)
+  campaign          Campaign        @relation(fields: [campaignId], references: [id])
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  payments          Payment[]
+  campaignId        Int
+  DonationRefund    DonationRefund?
+}
+
+model Payment {
+  id                  Int               @id @default(autoincrement())
+  donation            CampaignDonations @relation(fields: [campaignDonationsId], references: [id])
+  amount              Float
+  status              String
+  campaignDonationsId Int
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+}
+
+model TwoFactor {
+  id        Int      @id @default(autoincrement())
+  admin     Admin    @relation(fields: [adminId], references: [id])
+  adminId   Int
+  code      String
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DonationRefund {
+  id                  Int               @id @default(autoincrement())
+  email               String
+  donation            CampaignDonations @relation(fields: [campaignDonationsId], references: [id])
+  campaignDonationsId Int               @unique
+  fulfilled           Boolean           @default(false)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+}

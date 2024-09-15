@@ -1,6 +1,17 @@
-import { MetaFunction } from '@remix-run/node'
-import { NavLink, Outlet, useLocation } from '@remix-run/react'
-import { ChevronDown, Menu, User } from 'lucide-react'
+import {
+  json,
+  LoaderFunctionArgs,
+  MetaFunction,
+  redirect,
+} from '@remix-run/node'
+import {
+  NavLink,
+  Outlet,
+  useFetcher,
+  useLoaderData,
+  useLocation,
+} from '@remix-run/react'
+import { ChevronDown, LogOut, Menu, User } from 'lucide-react'
 import {
   Campaigns,
   Dashboard,
@@ -11,23 +22,29 @@ import {
   Reports,
   UserMgt,
 } from '~/components/shared/icons'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu'
+import { preventUnAuthorizedUser } from '~/lib/preventUnAuthorizedUser'
+import { getSession } from '~/sessions'
 // import { preventUnAuthorizedUser } from '~/lib/preventUnAuthorizedUser'
 // import { getSession } from '~/sessions'
 
-// export async function loader({ request }: LoaderFunctionArgs) {
-//   if (await preventUnAuthorizedUser(request)) {
-//     return redirect('/login')
-//   }
+export async function loader({ request }: LoaderFunctionArgs) {
+  if (await preventUnAuthorizedUser(request)) {
+    return redirect('/login')
+  }
 
-//   const session = await getSession(request.headers.get('Cookie'))
-//   const firstName = session.get('firstName')
-//   const streak = session.get('streak')
+  const session = await getSession(request.headers.get('Cookie'))
+  const firstName = session.get('firstName') as string
 
-//   return json({
-//     firstName,
-//     streak,
-//   })
-// }
+  return json({
+    firstName,
+  })
+}
 
 const links = [
   {
@@ -65,11 +82,12 @@ const links = [
 
 export const meta: MetaFunction = () => [
   {
-    title: 'OctoMed | Your AI Health Assistant',
+    title: 'Big Alliance | Empowering Communities, Elevating Partnerships.',
   },
   {
     name: 'description',
-    content: 'Your AI Health Assistant',
+    content:
+      'We make community investment easier, more effective  and more rewarding for our business partners.',
   },
 ]
 
@@ -94,6 +112,7 @@ const titles = [
 
 export default function DashboardLayout() {
   const location = useLocation()
+  const { firstName } = useLoaderData<typeof loader>()
 
   const getTitle = () => {
     const key = location.pathname.split('/')[2]
@@ -102,6 +121,8 @@ export default function DashboardLayout() {
 
     return route?.title ?? ''
   }
+
+  const fetcher = useFetcher()
 
   return (
     <section className="h-screen max-h-screen w-full bg-[#fdfdfd] lg:grid lg:grid-cols-[280px,auto] lg:gap-3 lg:overflow-hidden lg:p-2">
@@ -140,10 +161,23 @@ export default function DashboardLayout() {
               <User className="size-4" />
             </div>
             <div className="hidden lg:block">
-              <p className="text-sm">Oliver Otchere</p>
+              <p className="text-sm">{firstName}</p>
               <p className="text-xs text-[#7C8293]">Admin</p>
             </div>
-            <ChevronDown color="#4D5061" className="size-4 lg:size-6" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <ChevronDown color="#4D5061" className="size-4 lg:size-6" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>
+                  <fetcher.Form method="POST" action="/signout">
+                    <button className="flex items-center gap-2 text-red-500">
+                      <LogOut className="size-5" /> Log out
+                    </button>
+                  </fetcher.Form>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         <div className="flex-1 overflow-scroll px-[14px] pb-10 lg:px-5">

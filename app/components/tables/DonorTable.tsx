@@ -6,51 +6,12 @@ import { Button } from '~/components/ui/button'
 import { Badge } from '../ui/badge'
 import AdminTable from './AdminTable'
 
-const data: DonorCompany[] = [
-  {
-    id: 'm5gr84i9',
-    contactPersonName: 'Obaa yaa',
-    status: 'verified',
-    contactPersonEmail: 'ken99@yahoo.com',
-    name: 'Music corp',
-  },
-  {
-    id: '3u1reuv4',
-    contactPersonName: 'Richmond Otchere',
-    status: 'unverified',
-    contactPersonEmail: 'Abe45@gmail.com',
-    name: 'Overcomers',
-  },
-  {
-    id: 'derv1ws0',
-    contactPersonName: 'Albert Otchere',
-    status: 'unverified',
-    contactPersonEmail: 'Monserrat44@gmail.com',
-    name: 'Wonder Nation',
-  },
-  {
-    id: '5kma53ae',
-    contactPersonName: 'Bismark Adgei',
-    status: 'verified',
-    contactPersonEmail: 'Silas22@gmail.com',
-    name: 'Big Nation',
-  },
-  {
-    id: 'bhqecj4p',
-    contactPersonName: 'Oliver Otchere',
-    status: 'declined',
-    contactPersonEmail: 'carmella@hotmail.com',
-    name: 'Glorous fjfj',
-  },
-]
-
 export type DonorCompany = {
-  id: string
-
+  id: number
   name: string
   contactPersonName: string
   contactPersonEmail: string
-  status: 'verified' | 'declined' | 'unverified'
+  status: 'VERIFIED' | 'DECLINED' | 'UNVERIFIED'
 }
 
 export const columns: ColumnDef<DonorCompany>[] = [
@@ -113,9 +74,9 @@ export const columns: ColumnDef<DonorCompany>[] = [
       const status = row.getValue('status') as string
       return (
         <Badge
-          className={`px-[20px] py-1 text-sm font-semibold capitalize ${status == 'declined' && 'bg-[#F04438] bg-opacity-25 text-[#F04438]'} ${status == 'verified' && 'bg-agreen bg-opacity-25 text-primary'} hover:!bg-opacity-25 hover:bg-none ${status == 'unverified' && 'bg-[#F79009] bg-opacity-25 text-[#F79009] hover:bg-none'}`}
+          className={`px-[20px] py-1 text-sm font-semibold capitalize ${status.toLowerCase() == 'declined' && 'bg-[#F04438] bg-opacity-25 text-[#F04438]'} ${status.toLowerCase() == 'verified' && 'bg-agreen bg-opacity-25 text-primary'} hover:!bg-opacity-25 hover:bg-none ${status.toLowerCase() == 'unverified' && 'bg-[#F79009] bg-opacity-25 text-[#F79009] hover:bg-none'}`}
         >
-          {status}
+          {status.toLowerCase()}
         </Badge>
       )
     },
@@ -140,6 +101,6 @@ export const columns: ColumnDef<DonorCompany>[] = [
   },
 ]
 
-export function DonorTable() {
+export function DonorTable({ data }: { data: DonorCompany[] }) {
   return <AdminTable data={data} columns={columns} />
 }

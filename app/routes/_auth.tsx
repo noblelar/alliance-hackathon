@@ -1,5 +1,16 @@
-import { Outlet } from '@remix-run/react'
+import { MetaFunction, Outlet } from '@remix-run/react'
 import { Logo } from '~/components/shared/icons'
+
+export const meta: MetaFunction = () => [
+  {
+    title: 'Big Alliance | Empowering Communities, Elevating Partnerships.',
+  },
+  {
+    name: 'description',
+    content:
+      'We make community investment easier, more effective  and more rewarding for our business partners.',
+  },
+]
 
 export default function Auth() {
   return (

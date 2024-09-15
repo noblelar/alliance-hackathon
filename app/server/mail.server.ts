@@ -1,20 +1,24 @@
-import * as fs from "fs/promises";
-import Mustache from "mustache";
-import path from "path";
-import nodemailer from "nodemailer";
+import * as fs from 'fs/promises'
+import Mustache from 'mustache'
+import nodemailer from 'nodemailer'
+import path, { dirname } from 'path'
+import { fileURLToPath } from 'url'
 
-async function customizeEmail<T>(data: T, templateName: string) {
-  const templatesDir = path.join(__dirname, "build_production");
-  const templatePath = path.join(templatesDir, templateName);
-  const html = (await fs.readFile(templatePath)).toString();
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
-  const view = { ...data };
-  const customized = Mustache.render(html, view);
+export async function customizeEmail<T>(data: T, templateName: string) {
+  const templatesDir = path.join(__dirname, 'mail')
+  const templatePath = path.join(templatesDir, templateName)
+  const html = (await fs.readFile(templatePath)).toString()
 
-  return customized;
+  const view = { ...data }
+  const customized = Mustache.render(html, view)
+
+  return customized
 }
 
-async function sendEmail(
+export async function sendEmail(
   html: string,
   to: string,
   subject: string,
@@ -22,12 +26,12 @@ async function sendEmail(
   filename?: string
 ) {
   const transporter = nodemailer.createTransport({
-    service: "gmail",
+    service: 'gmail',
     auth: {
       user: process.env.EMAIL,
       pass: process.env.EMAIL_PASS,
     },
-  });
+  })
 
   const mailOptions = {
     from: process.env.EMAIL,
@@ -42,16 +46,16 @@ async function sendEmail(
         },
       ],
     }),
-  };
+  }
 
   transporter.sendMail(
     { ...mailOptions, attachDataUrls: true },
     function (error, info) {
       if (error) {
-        console.log(error);
+        console.log(error)
       } else {
-        console.log("Email sent: " + info.response);
+        console.log('Email sent: ' + info.response)
       }
     }
-  );
+  )
 }

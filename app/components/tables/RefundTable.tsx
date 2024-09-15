@@ -1,76 +1,16 @@
 import { ColumnDef } from '@tanstack/react-table'
 import { ArrowUpDown } from 'lucide-react'
 
+import { CampaignDonations, DonationRefund, DonorCompany } from '@prisma/client'
+import { Form } from '@remix-run/react'
 import dayjs from 'dayjs'
 import { Button } from '~/components/ui/button'
 import { Badge } from '../ui/badge'
 import AdminTable from './AdminTable'
 
-const data: RefundRequest[] = [
-  {
-    id: 'm5gr84i9',
-    name: 'Obaa yaa',
-    status: 'incomplete',
-    email: 'ken99@yahoo.com',
-    companyName: 'Music corp',
-    amount: 2000,
-    donorId: 'D122445569',
-    date: '2012-04-23T18:25:43.511Z',
-  },
-  {
-    id: '3u1reuv4',
-    name: 'Richmond Otchere',
-    status: 'incomplete',
-    email: 'Abe45@gmail.com',
-    companyName: 'Overcomers',
-    amount: 2000,
-    donorId: 'D122445569',
-    date: '2012-04-23T18:25:43.511Z',
-  },
-  {
-    id: 'derv1ws0',
-    name: 'Albert Otchere',
-    status: 'complete',
-    email: 'Monserrat44@gmail.com',
-    companyName: 'Wonder Nation',
-    amount: 2000,
-    donorId: 'D122445569',
-    date: '2012-04-23T18:25:43.511Z',
-  },
-  {
-    id: '5kma53ae',
-    name: 'Bismark Adgei',
-    status: 'complete',
-    email: 'Silas22@gmail.com',
-    companyName: 'Big Nation',
-    amount: 2000,
-    donorId: 'D122445569',
-    date: '2012-04-23T18:25:43.511Z',
-  },
-  {
-    id: 'bhqecj4p',
-    name: 'Oliver Otchere',
-    status: 'complete',
-    email: 'carmella@hotmail.com',
-    companyName: 'Glorous fjfj',
-    amount: 2000,
-    donorId: 'D122445569',
-    date: '2012-04-23T18:25:43.511Z',
-  },
-]
-
-export type RefundRequest = {
-  id: string
-  name: string
-  companyName: string
-  email: string
-  status: 'complete' | 'incomplete'
-  amount: number
-  donorId: string
-  date: string
-}
-
-export const columns: ColumnDef<RefundRequest>[] = [
+export const columns: ColumnDef<
+  DonationRefund & { donation: CampaignDonations }
+>[] = [
   {
     accessorKey: 'date',
     header: ({ column }) => {
@@ -87,7 +27,7 @@ export const columns: ColumnDef<RefundRequest>[] = [
     },
     cell: ({ row }) => (
       <div className="capitalize">
-        {dayjs(row.getValue('date')).format('DD MMM, YYYY')}
+        {dayjs(row.original.createdAt).format('DD MMM, YYYY')}
       </div>
     ),
   },
@@ -95,7 +35,7 @@ export const columns: ColumnDef<RefundRequest>[] = [
     accessorKey: 'donorId',
     header: () => <div className="">Donor ID</div>,
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue('donorId')}</div>
+      <div className="capitalize">{row.original.donation.donationId}</div>
     ),
   },
   {
@@ -118,7 +58,7 @@ export const columns: ColumnDef<RefundRequest>[] = [
     accessorKey: 'amount',
     header: () => <div className="">Amount</div>,
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue('amount'))
+      const amount = row.original.donation.amount
 
       const formatted = new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -129,15 +69,15 @@ export const columns: ColumnDef<RefundRequest>[] = [
     },
   },
   {
-    accessorKey: 'status',
+    accessorKey: 'fulfilled',
     header: 'Status',
     cell: ({ row }) => {
-      const status = row.getValue('status') as string
+      const status = row.getValue('fulfilled') as string
       return (
         <Badge
           className={`px-[20px] py-1 text-sm font-semibold capitalize ${status == 'incomplete' && 'bg-[#F04438] bg-opacity-25 text-[#F04438]'} ${status == 'complete' && 'bg-agreen bg-opacity-25 text-primary'} hover:!bg-opacity-25 hover:bg-none ${status == 'unverified' && 'bg-[#F79009] bg-opacity-25 text-[#F79009] hover:bg-none'}`}
         >
-          {status}
+          {status ? 'Completed' : 'Incompleted'}
         </Badge>
       )
     },
@@ -148,17 +88,24 @@ export const columns: ColumnDef<RefundRequest>[] = [
     accessorKey: 'Actions',
     enableHiding: false,
     cell: ({ row }) => {
-      const status = row.original.status
+      const status = row.original.fulfilled
 
-      return status == 'incomplete' ? (
-        <button className="text-base font-bold text-blue-600 underline">
-          Mark As Complete
-        </button>
+      return status == false ? (
+        <Form method="POST">
+          <input className="hidden" value={row.original.id} name="requestId" />
+          <button className="text-base font-bold text-blue-600 underline">
+            Mark As Complete
+          </button>
+        </Form>
       ) : null
     },
   },
 ]
 
-export function RefundTable() {
+export function RefundTable({
+  data,
+}: {
+  data: (DonationRefund & { donation: DonorCompany })[]
+}) {
   return <AdminTable data={data} columns={columns} />
 }
