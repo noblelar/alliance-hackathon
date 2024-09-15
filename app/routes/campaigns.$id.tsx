@@ -1,14 +1,18 @@
+import { Link, useParams } from '@remix-run/react'
 import { ChevronLeftCircle } from 'lucide-react'
 import NavBar from '~/components/ui/NavBar'
 import { Progress } from '~/components/ui/progress'
 
 export default function CampaignDetails() {
+  const { id } = useParams()
   return (
     <div>
       <NavBar />
 
       <div className="mx-auto max-w-[1440px] px-[100px] pt-[160px]">
-        <ChevronLeftCircle className="size-[35px]" />
+        <Link to={'/campaigns'}>
+          <ChevronLeftCircle className="size-[35px]" />
+        </Link>
         <div className="flex gap-[60px]">
           <div className="flex-1 pb-20">
             <h1 className="mt-[30px] text-[20px] font-bold text-[#333] lg:mt-[40px] lg:text-2xl">
@@ -69,12 +73,16 @@ export default function CampaignDetails() {
                 </p>
 
                 <div className="mt-5">
-                  <button className="w-full rounded-full border-2 border-primary py-[14px] font-bold text-primary hover:bg-agreen hover:bg-opacity-20">
-                    Donate as an Individual
-                  </button>
-                  <button className="mt-5 w-full rounded-full border-2 border-primary py-[14px] font-bold text-primary hover:bg-agreen hover:bg-opacity-20">
-                    Donate as a Company
-                  </button>
+                  <Link to={`/donate/${id}?type=individual`}>
+                    <button className="w-full rounded-full border-2 border-primary py-[14px] font-bold text-primary hover:bg-agreen hover:bg-opacity-20">
+                      Donate as an Individual
+                    </button>
+                  </Link>
+                  <Link to={`/donate/${id}?type=company`}>
+                    <button className="mt-5 w-full rounded-full border-2 border-primary py-[14px] font-bold text-primary hover:bg-agreen hover:bg-opacity-20">
+                      Donate as a Company
+                    </button>
+                  </Link>
                 </div>
               </div>
             </div>
