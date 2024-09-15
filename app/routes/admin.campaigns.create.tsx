@@ -1,3 +1,4 @@
+import { ActionFunctionArgs, json } from '@remix-run/node'
 import { Form, Link, MetaFunction } from '@remix-run/react'
 import { ChevronDown, ChevronLeftCircle, Landmark } from 'lucide-react'
 import { useState } from 'react'
@@ -35,24 +36,50 @@ export const PaymentMethod = [
   {
     name: 'Credit/Debit Card',
     Icon: Card,
+    value: 'CARD',
   },
   {
     name: 'Paypal',
     Icon: Paypal,
+    value: 'PAYPAL',
   },
   {
     name: 'Apple Pay',
     Icon: ApplePay,
+    value: 'APPLEPAY',
   },
   {
     name: 'Google pay',
     Icon: Google,
+    value: 'GOOGLEPAY',
   },
   {
     name: 'Bank Account',
     Icon: Landmark,
+    value: 'BANKACCOUNT',
   },
 ]
+
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const formData = await request.formData()
+  const title = formData.get('title') ?? ''
+  const image = formData.get('image') ?? ''
+  const message = formData.get('message') ?? ''
+  const targetAmount = formData.get('targetAmount') ?? ''
+  const status = formData.get('status')
+  const acceptPaymentMethods = formData.getAll('acceptPaymentMethods')
+
+  console.log({
+    title,
+    image,
+    message,
+    targetAmount,
+    status,
+    acceptPaymentMethods,
+  })
+
+  return json({})
+}
 
 export default function CreateCampaign() {
   const [step, setStep] = useState(1)
@@ -124,184 +151,193 @@ export default function CreateCampaign() {
         </div>
       </div>
 
-      <Form className="relative lg:h-full lg:flex-shrink-0 lg:overflow-y-scroll lg:bg-white lg:shadow-lg">
-        {step == 1 && (
-          <div className="mx-auto mt-[150px] h-full max-w-[760px]">
-            <h3 className="text-center text-2xl font-bold">Campaign Details</h3>
-            <p className="mx-auto mt-[15px] max-w-[284px] text-center">
-              Enter the details of the campaign you want to publish
-            </p>
+      <Form
+        method="POST"
+        className="relative lg:h-full lg:flex-shrink-0 lg:overflow-y-scroll lg:bg-white lg:shadow-lg"
+      >
+        <div
+          className={`mx-auto mt-[150px] h-full max-w-[760px] ${step == 1 ? 'block' : 'hidden'}`}
+        >
+          <h3 className="text-center text-2xl font-bold">Campaign Details</h3>
+          <p className="mx-auto mt-[15px] max-w-[284px] text-center">
+            Enter the details of the campaign you want to publish
+          </p>
 
-            <div className="mx-auto mt-[30px] max-w-[530px]">
-              <div>
-                <p className="mb-5">
-                  Campaign Title <span className="text-red-400">*</span>
-                </p>
-                <Input
-                  label="Title"
-                  type="text"
-                  name={'title'}
-                  error={getFormError('title', [])}
-                />
-              </div>
-
-              <div className="mt-10">
-                <p className="mb-5">
-                  Campaign Title <span className="text-red-400">*</span>
-                </p>
-
-                {campaignImage?.length != 0 ? (
-                  <div>
-                    <img
-                      src={campaignImage}
-                      className="h-[250px] w-full rounded-[10px] object-cover"
-                    />
-                    <button className="text-xs font-bold text-red-500 underline">
-                      Remove
-                    </button>
-                  </div>
-                ) : (
-                  <div className="relative flex h-[150px] flex-col items-center justify-center gap-5 rounded-[10px] border border-dashed border-agreen">
-                    <Upload />
-                    <p className="cursor-pointer text-center text-xs font-bold text-agreen">
-                      click to upload
-                    </p>
-
-                    <input
-                      className="absolute top-0 z-0 h-full w-full cursor-pointer opacity-0"
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleImage}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <input
-                value={campaignImage}
-                name="campaignImage"
-                className="hidden"
+          <div className="mx-auto mt-[30px] max-w-[530px]">
+            <div>
+              <p className="mb-5">
+                Campaign Title <span className="text-red-400">*</span>
+              </p>
+              <Input
+                label="Title"
+                type="text"
+                name={'title'}
+                error={getFormError('title', [])}
               />
-
-              <div className="mt-10">
-                <p className="mb-5">
-                  Campaign Message <span className="text-red-400">*</span>
-                </p>
-                <input
-                  name="message"
-                  className="hidden"
-                  value={campaignMessage}
-                />
-                <EditorArea
-                  initialData={campaignMessage}
-                  onChange={(v) => setCampaignMessage(v)}
-                />
-              </div>
             </div>
 
-            <div className="flex justify-between lg:pb-[50px] lg:pt-[117px]">
-              <Link to="/admin/campaigns">
-                <button
-                  type="button"
-                  className="rounded-full border-2 border-gray-500 px-[54px] py-3 font-bold text-gray-500"
-                >
-                  Back
-                </button>
-              </Link>
+            <div className="mt-10">
+              <p className="mb-5">
+                Campaign Title <span className="text-red-400">*</span>
+              </p>
 
-              <button
-                onClick={() => setStep(2)}
-                type="button"
-                className="rounded-full border-2 border-abgreen bg-abgreen px-[54px] py-3 font-bold text-white"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
+              {campaignImage?.length != 0 ? (
+                <div>
+                  <img
+                    src={campaignImage}
+                    className="h-[250px] w-full rounded-[10px] object-cover"
+                  />
+                  <button className="text-xs font-bold text-red-500 underline">
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div className="relative flex h-[150px] flex-col items-center justify-center gap-5 rounded-[10px] border border-dashed border-agreen">
+                  <Upload />
+                  <p className="cursor-pointer text-center text-xs font-bold text-agreen">
+                    click to upload
+                  </p>
 
-        {step == 2 && (
-          <div className="mx-auto mt-[150px] h-full max-w-[760px]">
-            <h3 className="text-center text-2xl font-bold">Target Amount</h3>
-            <p className="mx-auto mt-[15px] max-w-[284px] text-center">
-              Set the amount for the donations to this campaign
-            </p>
-
-            <div className="mx-auto mt-[30px] max-w-[530px]">
-              <div>
-                <p className="mb-5">
-                  Target Amount <span className="text-red-400">*</span>
-                </p>
-
-                <div className="flex overflow-hidden rounded-[10px] border">
-                  <div className="bg-[#D0D5DD4D] py-4 pl-5 pr-4">
-                    <p>USD</p>
-                  </div>
                   <input
-                    type="number"
-                    placeholder="0.00"
-                    className="flex-1 px-4 outline-none"
+                    className="absolute top-0 z-0 h-full w-full cursor-pointer opacity-0"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImage}
                   />
                 </div>
-              </div>
-
-              <div className="mt-10">
-                <p className="mb-5">
-                  Accepted Payment Methods{' '}
-                  <span className="text-red-400">*</span>
-                </p>
-
-                <div className="mt-6 flex flex-col gap-5">
-                  {PaymentMethod.map(({ name, Icon }) => (
-                    <PaymentOption name={name} Icon={Icon} />
-                  ))}
-                </div>
-              </div>
+              )}
             </div>
 
-            <div className="flex items-center justify-between lg:pb-[50px] lg:pt-[117px]">
+            <input value={campaignImage} name="image" className="hidden" />
+
+            <div className="mt-10">
+              <p className="mb-5">
+                Campaign Message <span className="text-red-400">*</span>
+              </p>
+              <input
+                name="message"
+                className="hidden"
+                value={campaignMessage}
+              />
+              <EditorArea
+                initialData={campaignMessage}
+                onChange={(v) => setCampaignMessage(v)}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-between lg:pb-[50px] lg:pt-[117px]">
+            <Link to="/admin/campaigns">
               <button
-                onClick={() => setStep(1)}
                 type="button"
-                className="rounded-full border-2 px-[54px] py-3 font-bold text-gray-500"
+                className="rounded-full border-2 border-gray-500 px-[54px] py-3 font-bold text-gray-500"
               >
                 Back
               </button>
+            </Link>
 
-              <Popover>
-                <PopoverTrigger>
-                  <button className="flex items-center rounded-full border-abgreen bg-abgreen font-bold text-white">
-                    <div className="flex-1 border-r border-white px-5 py-3">
-                      Publish
-                    </div>
-                    <div className="px-4 py-3">
-                      <ChevronDown />
-                    </div>
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="flex w-[160px] flex-col space-y-1 rounded-[8px] px-0 py-[5px]">
-                  <button
-                    onClick={() => setStep(3)}
-                    className="px-[14px] py-[10px] text-base hover:bg-gray-100"
-                  >
-                    Save as active
-                  </button>
-                  <hr className="mx-auto w-[80%]" />
-                  <button
-                    onClick={() => setOpenDraft(true)}
-                    className="px-[14px] py-[10px] text-base hover:bg-gray-100"
-                  >
-                    Save as draft
-                  </button>
-                </PopoverContent>
-              </Popover>
+            <button
+              onClick={() => setStep(2)}
+              type="button"
+              className="rounded-full border-2 border-abgreen bg-abgreen px-[54px] py-3 font-bold text-white"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+
+        <div
+          className={`mx-auto mt-[150px] h-full max-w-[760px] ${step == 2 ? 'block' : 'hidden'}`}
+        >
+          <h3 className="text-center text-2xl font-bold">Target Amount</h3>
+          <p className="mx-auto mt-[15px] max-w-[284px] text-center">
+            Set the amount for the donations to this campaign
+          </p>
+
+          <div className="mx-auto mt-[30px] max-w-[530px]">
+            <div>
+              <p className="mb-5">
+                Target Amount <span className="text-red-400">*</span>
+              </p>
+
+              <div className="flex overflow-hidden rounded-[10px] border">
+                <div className="bg-[#D0D5DD4D] py-4 pl-5 pr-4">
+                  <p>USD</p>
+                </div>
+                <input
+                  type="number"
+                  placeholder="0.00"
+                  className="flex-1 px-4 outline-none"
+                  name="targetAmount"
+                />
+              </div>
+            </div>
+
+            <div className="mt-10">
+              <p className="mb-5">
+                Accepted Payment Methods <span className="text-red-400">*</span>
+              </p>
+
+              <div className="mt-6 flex flex-col gap-5">
+                {PaymentMethod.map(({ name, Icon, value }) => (
+                  <PaymentOption value={value} name={name} Icon={Icon} />
+                ))}
+              </div>
             </div>
           </div>
-        )}
-      </Form>
+          <button type="submit" name="status" value="draft">
+            Testing
+          </button>
 
-      <DraftCampaignConfirm isOpen={openDraft} setOpen={setOpenDraft} />
+          <div className="flex items-center justify-between lg:pb-[50px] lg:pt-[117px]">
+            <button
+              onClick={() => setStep(1)}
+              type="button"
+              className="rounded-full border-2 px-[54px] py-3 font-bold text-gray-500"
+            >
+              Back
+            </button>
+
+            <Popover>
+              <PopoverTrigger type="button">
+                <button
+                  type="button"
+                  className="flex items-center rounded-full border-abgreen bg-abgreen font-bold text-white"
+                >
+                  <div className="flex-1 border-r border-white px-5 py-3">
+                    Publish
+                  </div>
+                  <div className="px-4 py-3">
+                    <ChevronDown />
+                  </div>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="flex w-[160px] flex-col space-y-1 rounded-[8px] px-0 py-[5px]">
+                <button
+                  onClick={() => setStep(3)}
+                  type="button"
+                  className="px-[14px] py-[10px] text-base hover:bg-gray-100"
+                >
+                  Save as active
+                </button>
+                <hr className="mx-auto w-[80%]" />
+                <button
+                  // onClick={() => setOpenDraft(true)}
+                  type="submit"
+                  name="status"
+                  value="draft"
+                  className="px-[14px] py-[10px] text-base hover:bg-gray-100"
+                >
+                  Save as draft
+                </button>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+
+        <DraftCampaignConfirm isOpen={openDraft} setOpen={setOpenDraft} />
+      </Form>
     </main>
   )
 }

@@ -50,16 +50,25 @@ enum DonorCompanyStatus {
   DECLINED
 }
 
+enum PaymentMethod {
+  CARD
+  PAYPAL
+  APPLEPAY
+  GOOGLEPAY
+  BANKACCOUNT
+}
+
 model Campaign {
-  id           Int                 @id @default(autoincrement())
-  image        String
-  title        String
-  targetAmount String
-  status       CampaignStatus      @default(DRAFT)
-  message      String
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
-  donations    CampaignDonations[]
+  id                   Int                 @id @default(autoincrement())
+  image                String?
+  title                String
+  targetAmount         Float               @default(0)
+  status               CampaignStatus      @default(DRAFT)
+  message              String?
+  donations            CampaignDonations[]
+  acceptPaymentMethods PaymentMethod[]
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
 }
 
 model DonorCompany {
@@ -85,7 +94,7 @@ model CampaignDonations {
   campaign          Campaign        @relation(fields: [campaignId], references: [id])
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
-  payments          Payment[]
+  payments          Payment?
   campaignId        Int
   DonationRefund    DonationRefund?
 }
@@ -95,7 +104,7 @@ model Payment {
   donation            CampaignDonations @relation(fields: [campaignDonationsId], references: [id])
   amount              Float
   status              String
-  campaignDonationsId Int
+  campaignDonationsId Int               @unique
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 }

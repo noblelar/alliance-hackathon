@@ -29,12 +29,20 @@ export default function DraftCampaignConfirm({
         </DialogHeader>
 
         <DialogFooter className="mt-5 gap-4">
-          <DialogClose>
-            <button className="rounded-full border-2 border-[#006B4B] px-[54px] py-2 font-bold text-[#006B4B]">
+          <DialogClose type="button">
+            <button
+              type="button"
+              className="rounded-full border-2 border-[#006B4B] px-[54px] py-2 font-bold text-[#006B4B]"
+            >
               Discard
             </button>
           </DialogClose>
-          <button className="hidden rounded-full border border-[#006B4B] bg-[#006B4B] px-[54px] py-2 font-bold text-white lg:block">
+          <button
+            type="submit"
+            name="status"
+            value="draft"
+            className="hidden rounded-full border border-[#006B4B] bg-[#006B4B] px-[54px] py-2 font-bold text-white lg:block"
+          >
             Save as Draft
           </button>
         </DialogFooter>

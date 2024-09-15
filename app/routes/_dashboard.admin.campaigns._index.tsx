@@ -1,7 +1,11 @@
-import { Form, Link } from '@remix-run/react'
+import { Form, json, Link } from '@remix-run/react'
 import { PlusCircle, Search } from 'lucide-react'
 import { Filter } from '~/components/shared/icons'
 import { Progress } from '~/components/ui/progress'
+
+export const loader = async () => {
+  return json({})
+}
 
 export default function Campaigns() {
   const currentTab = 'All Campaigns'
