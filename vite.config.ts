@@ -1,6 +1,7 @@
-import { vitePlugin as remix } from "@remix-run/dev";
-import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
+import { vitePlugin as remix } from '@remix-run/dev'
+import { defineConfig } from 'vite'
+import { viteStaticCopy } from 'vite-plugin-static-copy'
+import tsconfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig({
   plugins: [
@@ -12,5 +13,13 @@ export default defineConfig({
       },
     }),
     tsconfigPaths(),
+    viteStaticCopy({
+      targets: [
+        {
+          src: 'app/server/mail/*.html', // path to your HTML files
+          dest: 'mail', // directory in the build output where they will be copied
+        },
+      ],
+    }),
   ],
-});
+})
