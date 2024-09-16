@@ -3,13 +3,13 @@ import { db } from '~/server/db.server'
 
 export const loader = async () => {
   const saltRounds = 10
-  const hash = await bcrypt.hash('Oliver054.', saltRounds)
+  const hash = await bcrypt.hash('Nobleman1.', saltRounds)
 
   const user = await db.admin.create({
     data: {
-      firstName: 'Oliver',
-      lastName: 'Otchere',
-      email: 'oliverotchere3@gmail.com',
+      firstName: 'Noble',
+      lastName: 'Ackor',
+      email: 'nobleackor@gmail.com',
       password: hash,
     },
   })
