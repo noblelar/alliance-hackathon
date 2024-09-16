@@ -72,31 +72,36 @@ model Campaign {
 }
 
 model DonorCompany {
-  id                 Int                @id @default(autoincrement())
+  id                 Int                 @id @default(autoincrement())
   name               String
   address            String
   contactPersonName  String
   contactPersonEmail String
-  declineMessage     String             @default("")
-  status             DonorCompanyStatus @default(UNVERIFIED)
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  declineMessage     String              @default("")
+  status             DonorCompanyStatus  @default(UNVERIFIED)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  CampaignDonations  CampaignDonations[]
 }
 
 model CampaignDonations {
-  id                Int             @id @default(autoincrement())
-  isCompanyDonation Boolean         @default(false)
-  name              String
-  email             String
-  amount            Float
-  donationId        String
-  GiftAided         Boolean         @default(false)
-  campaign          Campaign        @relation(fields: [campaignId], references: [id])
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  payments          Payment?
-  campaignId        Int
-  DonationRefund    DonationRefund?
+  id                  Int             @id @default(autoincrement())
+  isCompanyDonation   Boolean         @default(false)
+  name                String
+  email               String
+  amount              Float
+  donationId          String          @unique @default(uuid())
+  GiftAided           Boolean         @default(false)
+  campaign            Campaign        @relation(fields: [campaignId], references: [id])
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  payments            Payment?
+  campaignId          Int
+  DonationRefund      DonationRefund?
+  DonorCompany        DonorCompany?   @relation(fields: [donorCompanyId], references: [id])
+  donorCompanyId      Int?
+  agreedCompanyMoney  Boolean         @default(false)
+  agreedPersonalMoney Boolean         @default(false)
 }
 
 model Payment {
@@ -127,4 +132,12 @@ model DonationRefund {
   fulfilled           Boolean           @default(false)
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
+}
+
+model NewsletterSubscriber {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

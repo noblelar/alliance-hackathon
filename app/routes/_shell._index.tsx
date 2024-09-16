@@ -1,10 +1,25 @@
-import { Form } from '@remix-run/react'
+import { json, LoaderFunctionArgs } from '@remix-run/node'
+import { Form, Link, useLoaderData } from '@remix-run/react'
 import { ChevronLeftCircle, ChevronRightCircle, Search } from 'lucide-react'
 import Hero from '~/assets/images/hero.png'
-import { Filter, Star } from '~/components/shared/icons'
+import { Star } from '~/components/shared/icons'
+import { getAllCampaigns } from '~/server/campaign'
 import { CampaignCard } from './_dashboard.admin.campaigns._index'
 
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const url = new URL(request.url)
+  const search = url.searchParams.get('search') ?? ''
+
+  const campaigns = await getAllCampaigns('PUBLISHED', search)
+
+  return json({
+    campaigns: campaigns.campaigns,
+  })
+}
+
 export default function Home() {
+  const { campaigns } = useLoaderData<typeof loader>()
+
   return (
     <>
       <div className="relative flex flex-col justify-end pb-[100px] lg:h-[700px] lg:w-full">
@@ -42,11 +57,6 @@ export default function Home() {
                   />
                 </div>
               </Form>
-
-              <button className="flex items-center gap-3 rounded-full border border-black px-5 py-3 text-sm">
-                <Filter />
-                <span className="hidden lg:inline-block">Filter</span>
-              </button>
             </div>
 
             <div className="flex gap-2">
@@ -62,13 +72,15 @@ export default function Home() {
           </div>
 
           <div className="mt-[40px] grid grid-cols-1 gap-y-[30px] md:grid-cols-2 md:gap-x-[23px] lg:grid-cols-4 lg:gap-y-[40px]">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <CampaignCard key={i} />
+            {campaigns.map((campaign) => (
+              <CampaignCard key={campaign.id} campaign={campaign as any} />
             ))}
           </div>
-          <button className="mx-auto mt-[50px] block rounded-full border-2 border-ablack px-[55px] py-3 font-bold">
-            View all campaigns
-          </button>
+          <Link to={'/campaigns'}>
+            <button className="mx-auto mt-[50px] block rounded-full border-2 border-ablack px-[55px] py-3 font-bold">
+              View all campaigns
+            </button>
+          </Link>
         </div>
 
         <div className="relative mt-[150px] flex h-[400px] w-full items-center justify-center overflow-hidden rounded-[30px] bg-abgreen">

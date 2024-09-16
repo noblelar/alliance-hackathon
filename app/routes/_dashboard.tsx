@@ -19,7 +19,6 @@ import {
   LogoLg,
   LogoSm,
   Refund,
-  Reports,
   UserMgt,
 } from '~/components/shared/icons'
 import {
@@ -50,7 +49,7 @@ const links = [
   {
     Icon: Dashboard,
     title: 'Dashboard',
-    link: '/admin/',
+    link: '/admin',
   },
   {
     Icon: Campaigns,
@@ -72,11 +71,6 @@ const links = [
     Icon: UserMgt,
     title: 'User Management',
     link: '/admin/user-management',
-  },
-  {
-    Icon: Reports,
-    title: 'Reports',
-    link: '/admin/reports',
   },
 ]
 
@@ -119,7 +113,7 @@ export default function DashboardLayout() {
 
     const route = titles.find((t) => t.link == key)
 
-    return route?.title ?? ''
+    return route?.title ?? 'Dasboard'
   }
 
   const fetcher = useFetcher()

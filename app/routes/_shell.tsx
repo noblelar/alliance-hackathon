@@ -1,11 +1,11 @@
-import { Link, MetaFunction, Outlet } from '@remix-run/react'
+import { MetaFunction, Outlet } from '@remix-run/react'
 import {
   FooterLogo,
   Instagram,
   LinkedIn,
-  LogoGreen,
   XLogo,
 } from '~/components/shared/icons'
+import NavBar from '~/components/ui/NavBar'
 
 export const meta: MetaFunction = () => [
   {
@@ -21,7 +21,7 @@ export const meta: MetaFunction = () => [
 export default function Home() {
   return (
     <div>
-      <div className="box-sh fixed left-0 right-0 top-5 z-10 mx-auto flex w-full max-w-[1380px] items-center justify-between rounded-[20px] bg-white px-[30px] py-[18px]">
+      {/* <div className="box-sh fixed left-0 right-0 top-5 z-10 mx-auto flex w-full max-w-[1380px] items-center justify-between rounded-[20px] bg-white px-[30px] py-[18px]">
         <LogoGreen className="h-[25px] w-[180px]" />
 
         <div className="flex gap-[30px]">
@@ -32,7 +32,8 @@ export default function Home() {
             </button>
           </Link>
         </div>
-      </div>
+      </div> */}
+      <NavBar />
       <Outlet />
       <div className="mx-auto max-w-[1440px] px-[50px]">
         <footer className="mt-[150px] flex justify-between border-t p-[50px]">

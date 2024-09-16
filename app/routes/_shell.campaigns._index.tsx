@@ -1,6 +1,6 @@
-import { Form } from '@remix-run/react'
+import { json, LoaderFunctionArgs } from '@remix-run/node'
+import { Form, useLoaderData } from '@remix-run/react'
 import { ChevronLeftCircle, ChevronRightCircle, Search } from 'lucide-react'
-import { Filter } from '~/components/shared/icons'
 import {
   Pagination,
   PaginationContent,
@@ -9,9 +9,22 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '~/components/ui/pagination'
+import { getAllCampaigns } from '~/server/campaign'
 import { CampaignCard } from './_dashboard.admin.campaigns._index'
 
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const url = new URL(request.url)
+  const search = url.searchParams.get('search') ?? ''
+
+  const campaigns = await getAllCampaigns('PUBLISHED', search)
+
+  return json({
+    campaigns: campaigns.campaigns,
+  })
+}
+
 export default function Campaigns() {
+  const { campaigns } = useLoaderData<typeof loader>()
   return (
     <>
       <div className="mx-auto max-w-[1440px] pt-[100px]">
@@ -33,9 +46,9 @@ export default function Campaigns() {
           <h3 className="mb-[50px] text-2xl font-bold">Campaigns</h3>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex w-[450px] items-center gap-3">
               <Form name="search" method="GET" className="flex w-full gap-2">
-                <div className="flex max-w-[311px] flex-1 items-center gap-3 rounded-full border border-ablack px-[14px] py-[10px] lg:max-w-[311px]">
+                <div className="flex max-w-[450px] flex-1 items-center gap-3 rounded-full border border-ablack px-[14px] py-[10px] lg:max-w-[311px]">
                   <Search strokeWidth={2.5} size={18} />
                   <input
                     type="text"
@@ -45,11 +58,6 @@ export default function Campaigns() {
                   />
                 </div>
               </Form>
-
-              <button className="flex items-center gap-3 rounded-full border border-black px-5 py-3 text-sm">
-                <Filter />
-                <span className="hidden lg:inline-block">Filter</span>
-              </button>
             </div>
 
             <div className="flex gap-2">
@@ -65,14 +73,14 @@ export default function Campaigns() {
           </div>
 
           <div className="mt-[40px] grid grid-cols-1 gap-y-[30px] md:grid-cols-2 md:gap-x-[23px] lg:grid-cols-4 lg:gap-y-[40px]">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map(
-              (i) => (
-                <CampaignCard key={i} />
-              )
-            )}
+            {campaigns.map((campaign) => (
+              <CampaignCard key={campaign.id} campaign={campaign as any} />
+            ))}
           </div>
           <div className="mt-[60px] flex items-center justify-between">
-            <p className="text-gray-600">Showing 1 to 3 of 3</p>
+            <p className="text-gray-600">
+              Showing 1 to {campaigns.length} of {campaigns.length}
+            </p>
             <Pagination className="mx-0 w-auto rounded-md border">
               <PaginationContent>
                 <PaginationItem className="border-r">

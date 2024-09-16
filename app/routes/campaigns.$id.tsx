@@ -1,10 +1,29 @@
-import { Link, useParams } from '@remix-run/react'
+import { json, LoaderFunctionArgs, redirect } from '@remix-run/node'
+import { Link, useLoaderData, useParams } from '@remix-run/react'
+import dayjs from 'dayjs'
 import { ChevronLeftCircle } from 'lucide-react'
 import NavBar from '~/components/ui/NavBar'
 import { Progress } from '~/components/ui/progress'
+import { formatMoney } from '~/lib/formatMoney'
+import { getCampaign } from '~/server/campaign'
+
+export async function loader({ request, params }: LoaderFunctionArgs) {
+  const campaignId = params.id as string
+
+  try {
+    const campaign = await getCampaign(parseInt(campaignId), false)
+
+    return json({
+      campaign: campaign.campaign,
+    })
+  } catch (error) {
+    return redirect('/campaigns')
+  }
+}
 
 export default function CampaignDetails() {
   const { id } = useParams()
+  const { campaign } = useLoaderData<typeof loader>()
   return (
     <div>
       <NavBar />
@@ -15,38 +34,24 @@ export default function CampaignDetails() {
         </Link>
         <div className="flex gap-[60px]">
           <div className="flex-1 pb-20">
-            <h1 className="mt-[30px] text-[20px] font-bold text-[#333] lg:mt-[40px] lg:text-2xl">
-              Support Annie’s Cancer Treatment
+            <h1 className="mt-[30px] text-[20px] font-bold capitalize text-[#333] lg:mt-[40px] lg:text-2xl">
+              {campaign.title}
             </h1>
             <p className="mt-[10px] text-[10px] lg:text-base">
-              Published: 20 August, 2024
+              Published: {dayjs(campaign.createdAt).format('DD MMMM, YYYY')}
             </p>
             <div className="flex flex-col gap-[25px] lg:flex-row">
               <div className="lg:flex-[1.5]">
                 <img
                   className="mt-5 h-[229px] w-full rounded-[20px] object-cover lg:h-[400px]"
-                  src="https://s3-alpha-sig.figma.com/img/4f4b/43e7/9e4bb24cd49fc410c89045988af9d938?Expires=1727049600&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4&Signature=aiBzVnAt1RiQXxmr3cGq~A3yc9pyZyhnVTUTYZkKv4bJ432hUOm2BWG-FCDRWPjWagnl0UOaJjN8DHpbUcp3ZgbZOdupSNp5BLqjNhW3a22j9TOFD2qjMiYe3hfaveG6bvfa~WHAkoRXNhYULxgBURQpB62fjaRY~Ze4Al3ZYTHYWYadejp-eaPwWK0K-WaWrQQD3VthjoP6MAbF1TcXTQSOQtHSUL51cNYF7wv05CQatclDo4Zcd7OeLmAnqDHt-uXEE1maDlc7wioCVAY7CMGM66UZDNn~2mMEjzz1lcRFM35B4FXxxclq5M2wFkh5pig8t~WhCaJ3BSEVicjMvw__"
+                  src={campaign.image!}
                   alt="poster"
                 />
 
-                <div className="mt-5 text-sm text-ablack lg:text-base">
-                  <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut
-                    et massa mi. Aliquam in hendrerit urna. Pellentesque sit
-                    amet sapien fringilla, mattis ligula consectetur, ultrices
-                    mauris. Maecenas vitae mattis tellus. Nullam quis imperdiet
-                    augue.
-                  </p>
-
-                  <p>
-                    Vestibulum auctor ornare leo, non suscipit magna interdum
-                    eu. Curabitur pellentesque nibh nibh, at maximus ante
-                    fermentum sit amet. Pellentesque commodo lacus at sodales
-                    sodales. Quisque sagittis orci ut diam condimentum, vel
-                    euismod erat placerat. In iaculis arcu eros, eget tempus
-                    orci facilisis id.
-                  </p>
-                </div>
+                <div
+                  className="mt-5 text-ablack lg:text-base"
+                  dangerouslySetInnerHTML={{ __html: campaign.message ?? '' }}
+                />
               </div>
             </div>
           </div>
@@ -54,14 +59,25 @@ export default function CampaignDetails() {
           <div className="w-[390px;]">
             <div className="box-sh mt-[120px] rounded-[20px] p-[25px]">
               <p className="mb-[10px] text-sm font-bold text-[#4D5061] lg:mb-[15px] lg:text-base">
-                Target: $100,000
+                Target: {formatMoney(campaign.targetAmount)}
               </p>
-              <Progress value={30} className="mb-[10px] h-2 lg:mb-[7px]" />
+              <Progress
+                value={
+                  (campaign.totalPaymentsRaised / campaign.targetAmount) * 100
+                }
+                className="mb-[10px] h-2 lg:mb-[7px]"
+              />
               <div className="flex items-center justify-between pb-[10px]">
                 <p className="text-xs text-[#7C8293] lg:text-sm">
-                  $23,580 raised
+                  {formatMoney(campaign.totalPaymentsRaised)} raised
                 </p>
-                <p className="text-xs text-[#7C8293] lg:text-sm">25%</p>
+                <p className="text-xs text-[#7C8293] lg:text-sm">
+                  {(
+                    (campaign.totalPaymentsRaised / campaign.targetAmount) *
+                    100
+                  ).toFixed(0)}
+                  %
+                </p>
               </div>
 
               <div className="mt-[30px]">
@@ -69,7 +85,7 @@ export default function CampaignDetails() {
                   Donations
                 </h4>
                 <p className="mt-[14px] text-sm text-[#7C8293]">
-                  23,459 donations
+                  {campaign.donations.length} donations
                 </p>
 
                 <div className="mt-5">

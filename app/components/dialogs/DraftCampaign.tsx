@@ -1,3 +1,4 @@
+import { useNavigation } from '@remix-run/react'
 import { SetStateAction } from 'react'
 import {
   Dialog,
@@ -12,10 +13,13 @@ import {
 export default function DraftCampaignConfirm({
   isOpen,
   setOpen,
+  onClick,
 }: {
   isOpen: boolean
   setOpen: React.Dispatch<SetStateAction<boolean>>
+  onClick: () => void
 }) {
+  const isLoading = useNavigation().state == 'loading'
   return (
     <Dialog onOpenChange={setOpen} open={isOpen}>
       <DialogContent className="sm:max-w-[425px] lg:max-w-[530px] lg:!p-[40px]">
@@ -38,12 +42,12 @@ export default function DraftCampaignConfirm({
             </button>
           </DialogClose>
           <button
-            type="submit"
-            name="status"
-            value="draft"
+            type="button"
             className="hidden rounded-full border border-[#006B4B] bg-[#006B4B] px-[54px] py-2 font-bold text-white lg:block"
+            onClick={onClick}
+            disabled={isLoading}
           >
-            Save as Draft
+            {isLoading ? 'Loading...' : 'Save as Draft'}
           </button>
         </DialogFooter>
       </DialogContent>

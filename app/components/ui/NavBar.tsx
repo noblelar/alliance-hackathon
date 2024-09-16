@@ -3,6 +3,10 @@ import { LogoGreen } from '~/components/shared/icons'
 
 const titles = [
   {
+    link: '/',
+    title: 'Home',
+  },
+  {
     link: '/campaigns',
     title: 'Campaigns',
   },

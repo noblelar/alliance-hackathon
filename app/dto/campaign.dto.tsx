@@ -75,3 +75,35 @@ export const campaignDTO = campaignBaseSchema
       path: ['acceptPaymentMethods'],
     }
   )
+
+export const donateDTO = z
+  .object({
+    fullname: z.string().min(1, 'Fullname is required'),
+    email: z.string().email('Invalid email address'),
+    amount: z.number().min(1).nonnegative('Amount must be non-negative'),
+    companyId: z.number().nonnegative().optional(), // companyId is optional, conditionally required
+    isGiftAided: z.boolean().default(false),
+    isMyOwnMoney: z.boolean().default(false), // Required conditionally
+    isCompanyMoney: z.boolean().default(false), // Required conditionally
+    address: z.string().optional().default(''), // Required conditionally
+    donorType: z.enum(['individual', 'company']),
+  })
+  .refine((data) => !data.isGiftAided || !!data.address, {
+    message: 'Address is required when Gift Aid is enabled',
+    path: ['address'], // Set the path for the error
+  })
+  .refine(
+    (data) => data.donorType !== 'company' || data.companyId !== undefined,
+    {
+      message: 'Company ID is required when donor type is company',
+      path: ['companyId'], // Set the path for the error
+    }
+  )
+  .refine((data) => data.donorType !== 'company' || data.isCompanyMoney, {
+    message: 'isCompanyMoney must be true when donor type is company',
+    path: ['isCompanyMoney'], // Set the path for the error
+  })
+  .refine((data) => data.donorType !== 'individual' || data.isMyOwnMoney, {
+    message: 'isMyOwnMoney is required when donor type is individual',
+    path: ['isMyOwnMoney'], // Set the path for the error
+  })

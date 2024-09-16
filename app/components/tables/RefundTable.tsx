@@ -5,6 +5,7 @@ import { CampaignDonations, DonationRefund, DonorCompany } from '@prisma/client'
 import { Form } from '@remix-run/react'
 import dayjs from 'dayjs'
 import { Button } from '~/components/ui/button'
+import { formatMoney } from '~/lib/formatMoney'
 import { Badge } from '../ui/badge'
 import AdminTable from './AdminTable'
 
@@ -60,12 +61,7 @@ export const columns: ColumnDef<
     cell: ({ row }) => {
       const amount = row.original.donation.amount
 
-      const formatted = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'GBP',
-      }).format(amount)
-
-      return <div className="font-medium">{formatted}</div>
+      return <div className="font-medium">{formatMoney(amount)}</div>
     },
   },
   {

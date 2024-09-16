@@ -1,7 +1,14 @@
 import { ActionFunctionArgs, json } from '@remix-run/node'
-import { Form, Link, MetaFunction } from '@remix-run/react'
+import {
+  Form,
+  Link,
+  MetaFunction,
+  useActionData,
+  useNavigate,
+} from '@remix-run/react'
 import { ChevronDown, ChevronLeftCircle, Landmark } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 import EditorArea from '~/components/campaigns/EditorArea'
 import PaymentOption from '~/components/campaigns/PaymentOption'
 import DraftCampaignConfirm from '~/components/dialogs/DraftCampaign'
@@ -18,7 +25,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '~/components/ui/popover'
+import { campaignDTO } from '~/dto/campaign.dto'
+import { formatZodErrors, IError } from '~/lib/formatZodError'
 import { getFormError } from '~/lib/getFormError'
+import { createCampaign } from '~/server/campaign'
 
 export const meta: MetaFunction = () => [
   {
@@ -65,26 +75,56 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const title = formData.get('title') ?? ''
   const image = formData.get('image') ?? ''
   const message = formData.get('message') ?? ''
-  const targetAmount = formData.get('targetAmount') ?? ''
+  const targetAmount = (formData.get('targetAmount') as string) ?? ''
   const status = formData.get('status')
   const acceptPaymentMethods = formData.getAll('acceptPaymentMethods')
 
-  console.log({
-    title,
-    image,
-    message,
-    targetAmount,
-    status,
-    acceptPaymentMethods,
-  })
+  try {
+    const result = campaignDTO.parse({
+      title,
+      image,
+      message,
+      targetAmount: isNaN(parseFloat(targetAmount))
+        ? 0
+        : parseFloat(targetAmount),
+      status,
+      acceptPaymentMethods,
+    })
 
-  return json({})
+    const response = await createCampaign(result)
+
+    return {
+      errors: [] as IError[],
+      response: response.message,
+      success: response.status,
+    }
+  } catch (error: any) {
+    if (error.errors?.length) {
+      return json({
+        errors: formatZodErrors(error.errors),
+        response: 'Validation Errors',
+        success: false,
+      })
+    }
+
+    return {
+      errors: [] as IError[],
+      response: error.message ?? 'An unexpected error occured',
+      success: false,
+    }
+  }
 }
 
 export default function CreateCampaign() {
   const [step, setStep] = useState(1)
   const [campaignMessage, setCampaignMessage] = useState('')
   const [campaignImage, setCampaignImage] = useState('')
+
+  const actionData = useActionData<typeof action>()
+  const router = useNavigate()
+
+  const draftBtn = useRef<HTMLButtonElement | null>(null)
+  const publishBtn = useRef<HTMLButtonElement | null>(null)
 
   const [openDraft, setOpenDraft] = useState(false)
 
@@ -104,6 +144,40 @@ export default function CreateCampaign() {
       }
     }
   }
+
+  useEffect(() => {
+    if (actionData) {
+      if (actionData?.success) {
+        toast.success(actionData.response, {
+          richColors: true,
+        })
+        router('/admin/campaigns')
+      } else {
+        toast.error(actionData.response, {
+          richColors: true,
+        })
+
+        if (
+          [
+            getFormError('title', actionData.errors),
+            getFormError('image', actionData.errors),
+            getFormError('message', actionData.errors),
+          ].some((error) => error !== undefined && error !== '')
+        ) {
+          setStep(1)
+          setOpenDraft(false)
+        } else if (
+          [
+            getFormError('targetAmount', actionData.errors),
+            getFormError('acceptPaymentMethods', actionData.errors),
+          ].some((error) => error !== undefined && error !== '')
+        ) {
+          setStep(2)
+          setOpenDraft(false)
+        }
+      }
+    }
+  }, [actionData])
 
   return (
     <main className="w-full overflow-y-hidden bg-white p-6 lg:grid lg:h-screen lg:grid-cols-[minmax(34%,483px),minmax(66%,auto)] lg:bg-[#fbf8f6] lg:p-0">
@@ -137,7 +211,7 @@ export default function CreateCampaign() {
                 Target Amount
               </h1>
             </div>
-            <div className="mt-[30px] flex items-center gap-3">
+            {/* <div className="mt-[30px] flex items-center gap-3">
               <div
                 className={`flex size-[30px] items-center justify-center rounded-full border ${step > 2 ? 'border-2 border-abgreen font-semibold text-abgreen' : 'border-black'}`}
               >
@@ -146,7 +220,7 @@ export default function CreateCampaign() {
               <h1 className={step > 2 ? `font-bold text-abgreen` : ''}>
                 Review and Publish
               </h1>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
@@ -172,7 +246,7 @@ export default function CreateCampaign() {
                 label="Title"
                 type="text"
                 name={'title'}
-                error={getFormError('title', [])}
+                error={getFormError('title', actionData?.errors)}
               />
             </div>
 
@@ -192,20 +266,27 @@ export default function CreateCampaign() {
                   </button>
                 </div>
               ) : (
-                <div className="relative flex h-[150px] flex-col items-center justify-center gap-5 rounded-[10px] border border-dashed border-agreen">
-                  <Upload />
-                  <p className="cursor-pointer text-center text-xs font-bold text-agreen">
-                    click to upload
-                  </p>
+                <>
+                  <div className="relative flex h-[150px] flex-col items-center justify-center gap-5 rounded-[10px] border border-dashed border-agreen">
+                    <Upload />
+                    <p className="cursor-pointer text-center text-xs font-bold text-agreen">
+                      click to upload
+                    </p>
 
-                  <input
-                    className="absolute top-0 z-0 h-full w-full cursor-pointer opacity-0"
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImage}
-                  />
-                </div>
+                    <input
+                      className="absolute top-0 z-0 h-full w-full cursor-pointer opacity-0"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImage}
+                    />
+                  </div>
+                  {getFormError('image', actionData?.errors) && (
+                    <p className="text-xs text-red-500">
+                      {getFormError('image', actionData?.errors)}
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
@@ -224,6 +305,11 @@ export default function CreateCampaign() {
                 initialData={campaignMessage}
                 onChange={(v) => setCampaignMessage(v)}
               />
+              {getFormError('message', actionData?.errors) && (
+                <p className="text-xs text-red-500">
+                  {getFormError('message', actionData?.errors)}
+                </p>
+              )}
             </div>
           </div>
 
@@ -263,7 +349,7 @@ export default function CreateCampaign() {
 
               <div className="flex overflow-hidden rounded-[10px] border">
                 <div className="bg-[#D0D5DD4D] py-4 pl-5 pr-4">
-                  <p>USD</p>
+                  <p>GBP</p>
                 </div>
                 <input
                   type="number"
@@ -272,6 +358,11 @@ export default function CreateCampaign() {
                   name="targetAmount"
                 />
               </div>
+              {getFormError('targetAmount', actionData?.errors) && (
+                <p className="text-xs text-red-500">
+                  {getFormError('targetAmount', actionData?.errors)}
+                </p>
+              )}
             </div>
 
             <div className="mt-10">
@@ -284,11 +375,27 @@ export default function CreateCampaign() {
                   <PaymentOption value={value} name={name} Icon={Icon} />
                 ))}
               </div>
+              {getFormError('acceptPaymentMethods', actionData?.errors) && (
+                <p className="text-xs text-red-500">
+                  {getFormError('acceptPaymentMethods', actionData?.errors)}
+                </p>
+              )}
             </div>
           </div>
-          <button type="submit" name="status" value="draft">
-            Testing
-          </button>
+          <button
+            type="submit"
+            name="status"
+            className="hidden"
+            value="DRAFT"
+            ref={draftBtn}
+          ></button>
+          <button
+            type="submit"
+            name="status"
+            className="hidden"
+            value="PUBLISHED"
+            ref={publishBtn}
+          ></button>
 
           <div className="flex items-center justify-between lg:pb-[50px] lg:pt-[117px]">
             <button
@@ -315,18 +422,18 @@ export default function CreateCampaign() {
               </PopoverTrigger>
               <PopoverContent className="flex w-[160px] flex-col space-y-1 rounded-[8px] px-0 py-[5px]">
                 <button
-                  onClick={() => setStep(3)}
+                  onClick={() => {
+                    publishBtn.current?.click()
+                  }}
                   type="button"
+                  key="active"
                   className="px-[14px] py-[10px] text-base hover:bg-gray-100"
                 >
                   Save as active
                 </button>
                 <hr className="mx-auto w-[80%]" />
                 <button
-                  // onClick={() => setOpenDraft(true)}
-                  type="submit"
-                  name="status"
-                  value="draft"
+                  onClick={() => setOpenDraft(true)}
                   className="px-[14px] py-[10px] text-base hover:bg-gray-100"
                 >
                   Save as draft
@@ -335,9 +442,14 @@ export default function CreateCampaign() {
             </Popover>
           </div>
         </div>
-
-        <DraftCampaignConfirm isOpen={openDraft} setOpen={setOpenDraft} />
       </Form>
+      <DraftCampaignConfirm
+        onClick={() => {
+          draftBtn.current?.click()
+        }}
+        isOpen={openDraft}
+        setOpen={setOpenDraft}
+      />
     </main>
   )
 }

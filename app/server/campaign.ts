@@ -21,6 +21,27 @@ export const createCampaign = async (data: Prisma.CampaignCreateInput) => {
   if (data.image && isBase64(data.image)) {
     data.image = await uploadCloudinary(data.image)
   }
+
+  try {
+    const campaign = await db.campaign.create({
+      data,
+    })
+
+    return {
+      status: true,
+      campaign,
+      message:
+        data.status == 'DRAFT'
+          ? 'Your campaign has been successfully saved into draft campaigns.'
+          : 'Your campaign has been successfully saved into active campaigns.',
+    }
+  } catch (error: any) {
+    return {
+      status: false,
+      campaign: null,
+      message: error.message || '',
+    }
+  }
 }
 
 export const endCampaign = async (id: number) => {
@@ -141,4 +162,34 @@ const calculateAmountRaised = (
   }, 0)
 
   return totalPaymentsRaised
+}
+
+export async function getTotalDonationsAmount() {
+  const totalAmount = await db.campaignDonations.aggregate({
+    _sum: {
+      amount: true,
+    },
+  })
+
+  return totalAmount._sum.amount || 0 // Return 0 if no donations are present
+}
+
+export async function getTotalRefundsAmount() {
+  // Fetch all refunds with their associated donation amount
+  const refunds = await db.donationRefund.findMany({
+    include: {
+      donation: {
+        select: {
+          amount: true, // Select the amount from CampaignDonations
+        },
+      },
+    },
+  })
+
+  // Sum the amounts of all refunded donations
+  const totalRefundsAmount = refunds.reduce((total, refund) => {
+    return total + refund.donation.amount
+  }, 0)
+
+  return totalRefundsAmount
 }
